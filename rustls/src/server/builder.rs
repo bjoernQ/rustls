@@ -1,4 +1,4 @@
-use alloc::sync::Arc;
+use crate::Arc;
 use alloc::vec::Vec;
 use core::marker::PhantomData;
 
@@ -32,7 +32,8 @@ impl ConfigBuilder<ServerConfig, WantsVerifier> {
 
     /// Disable client authentication.
     pub fn with_no_client_auth(self) -> ConfigBuilder<ServerConfig, WantsServerCert> {
-        self.with_client_cert_verifier(Arc::new(NoClientAuth))
+        let boxed: alloc::boxed::Box<dyn ClientCertVerifier> = alloc::boxed::Box::new(NoClientAuth);
+        self.with_client_cert_verifier(Arc::from(boxed))
     }
 }
 
@@ -85,7 +86,8 @@ impl ConfigBuilder<ServerConfig, WantsServerCert> {
         }
 
         let resolver = handy::AlwaysResolvesChain::new(certified_key);
-        Ok(self.with_cert_resolver(Arc::new(resolver)))
+        let boxed: alloc::boxed::Box<dyn ResolvesServerCert> = alloc::boxed::Box::new(resolver);
+        Ok(self.with_cert_resolver(Arc::from(boxed)))
     }
 
     /// Sets a single certificate chain, matching private key and optional OCSP
@@ -121,11 +123,17 @@ impl ConfigBuilder<ServerConfig, WantsServerCert> {
         }
 
         let resolver = handy::AlwaysResolvesChain::new_with_extras(certified_key, ocsp);
-        Ok(self.with_cert_resolver(Arc::new(resolver)))
+        let boxed: alloc::boxed::Box<dyn ResolvesServerCert> = alloc::boxed::Box::new(resolver);
+        Ok(self.with_cert_resolver(Arc::from(boxed)))
     }
 
     /// Sets a custom [`ResolvesServerCert`].
     pub fn with_cert_resolver(self, cert_resolver: Arc<dyn ResolvesServerCert>) -> ServerConfig {
+        #[cfg(not(feature = "std"))]
+        let boxed_session_storage: alloc::boxed::Box<dyn super::StoresServerSessions + Send + Sync> = alloc::boxed::Box::new(handy::NoServerSessionStorage {});
+        let boxed_ticketer: alloc::boxed::Box<dyn super::ProducesTickets> = alloc::boxed::Box::new(handy::NeverProducesTickets {});
+        let boxed_keylog: alloc::boxed::Box<dyn crate::KeyLog> = alloc::boxed::Box::new(NoKeyLog {});
+
         ServerConfig {
             provider: self.state.provider,
             verifier: self.state.verifier,
@@ -135,11 +143,11 @@ impl ConfigBuilder<ServerConfig, WantsServerCert> {
             #[cfg(feature = "std")]
             session_storage: handy::ServerSessionMemoryCache::new(256),
             #[cfg(not(feature = "std"))]
-            session_storage: Arc::new(handy::NoServerSessionStorage {}),
-            ticketer: Arc::new(handy::NeverProducesTickets {}),
+            session_storage: Arc::from(boxed_session_storage),
+            ticketer: Arc::from(boxed_ticketer),
             alpn_protocols: Vec::new(),
             versions: self.state.versions,
-            key_log: Arc::new(NoKeyLog {}),
+            key_log: Arc::from(boxed_keylog),
             enable_secret_extraction: false,
             max_early_data_size: 0,
             send_half_rtt_data: false,

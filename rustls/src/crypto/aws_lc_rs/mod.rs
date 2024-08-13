@@ -1,4 +1,4 @@
-use alloc::sync::Arc;
+use crate::Arc;
 use alloc::vec::Vec;
 
 // aws-lc-rs has a -- roughly -- ring-compatible API, so we just reuse all that

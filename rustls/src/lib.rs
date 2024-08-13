@@ -423,6 +423,14 @@ mod suites;
 mod versions;
 mod webpki;
 
+/// Type-alias for [alloc::sync::Arc]
+#[cfg(not(feature = "portable-atomic"))]
+pub type Arc<T> = alloc::sync::Arc<T>;
+
+/// Type-alias for [portable_atomic_util::Arc]
+#[cfg(feature = "portable-atomic")]
+pub type Arc<T> = portable_atomic_util::Arc<T>;
+
 /// Internal classes that are used in integration tests.
 /// The contents of this section DO NOT form part of the stable interface.
 #[allow(missing_docs)]

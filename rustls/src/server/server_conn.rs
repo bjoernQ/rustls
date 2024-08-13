@@ -1,5 +1,5 @@
 use alloc::boxed::Box;
-use alloc::sync::Arc;
+use crate::Arc;
 use alloc::vec::Vec;
 use core::fmt;
 use core::fmt::{Debug, Formatter};
@@ -422,10 +422,11 @@ impl ServerConfig {
     pub fn builder_with_provider(
         provider: Arc<CryptoProvider>,
     ) -> ConfigBuilder<Self, WantsVersions> {
+        let boxed: Box<dyn TimeProvider> = Box::new(DefaultTimeProvider);
         ConfigBuilder {
             state: WantsVersions {
                 provider,
-                time_provider: Arc::new(DefaultTimeProvider),
+                time_provider: Arc::from(boxed),
             },
             side: PhantomData,
         }
@@ -511,7 +512,7 @@ impl ServerConfig {
 #[cfg(feature = "std")]
 mod connection {
     use alloc::boxed::Box;
-    use alloc::sync::Arc;
+    use crate::Arc;
     use alloc::vec::Vec;
     use core::fmt;
     use core::fmt::{Debug, Formatter};

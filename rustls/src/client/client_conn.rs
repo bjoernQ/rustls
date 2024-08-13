@@ -1,4 +1,4 @@
-use alloc::sync::Arc;
+use crate::Arc;
 use alloc::vec::Vec;
 use core::marker::PhantomData;
 use core::ops::{Deref, DerefMut};
@@ -309,10 +309,11 @@ impl ClientConfig {
     pub fn builder_with_provider(
         provider: Arc<CryptoProvider>,
     ) -> ConfigBuilder<Self, WantsVersions> {
+        let boxed: alloc::boxed::Box<dyn TimeProvider> = alloc::boxed::Box::new(DefaultTimeProvider);
         ConfigBuilder {
             state: WantsVersions {
                 provider,
-                time_provider: Arc::new(DefaultTimeProvider),
+                time_provider: Arc::from(boxed),
             },
             side: PhantomData,
         }
@@ -437,8 +438,9 @@ impl Resumption {
     /// a session id or RFC 5077 ticket.
     #[cfg(feature = "std")]
     pub fn in_memory_sessions(num: usize) -> Self {
+        let boxed: alloc::boxed::Box<dyn ClientSessionStore> = alloc::boxed::Box::new(super::handy::ClientSessionMemoryCache::new(num));
         Self {
-            store: Arc::new(super::handy::ClientSessionMemoryCache::new(num)),
+            store: Arc::from(boxed),
             tls12_resumption: Tls12Resumption::SessionIdOrTickets,
         }
     }
@@ -455,8 +457,9 @@ impl Resumption {
 
     /// Disable all use of session resumption.
     pub fn disabled() -> Self {
+        let boxed: alloc::boxed::Box<dyn ClientSessionStore> = alloc::boxed::Box::new(NoClientSessionStorage);
         Self {
-            store: Arc::new(NoClientSessionStorage),
+            store: Arc::from(boxed),
             tls12_resumption: Tls12Resumption::Disabled,
         }
     }
@@ -503,7 +506,7 @@ pub enum Tls12Resumption {
 
 /// Container for unsafe APIs
 pub(super) mod danger {
-    use alloc::sync::Arc;
+    use crate::Arc;
 
     use super::verify::ServerCertVerifier;
     use super::ClientConfig;
@@ -603,7 +606,7 @@ impl EarlyData {
 
 #[cfg(feature = "std")]
 mod connection {
-    use alloc::sync::Arc;
+    use crate::Arc;
     use alloc::vec::Vec;
     use core::fmt;
     use core::ops::{Deref, DerefMut};

@@ -1,4 +1,4 @@
-use alloc::sync::Arc;
+use crate::Arc;
 use alloc::vec::Vec;
 use core::marker::PhantomData;
 
@@ -58,8 +58,9 @@ impl ConfigBuilder<ClientConfig, WantsVerifier> {
             .state
             .provider
             .signature_verification_algorithms;
+        let boxed: alloc::boxed::Box<dyn verify::ServerCertVerifier> = alloc::boxed::Box::new(WebPkiServerVerifier::new_without_revocation(root_store, algorithms));
         self.with_webpki_verifier(
-            WebPkiServerVerifier::new_without_revocation(root_store, algorithms).into(),
+            Arc::from(boxed),
         )
     }
 
@@ -69,7 +70,7 @@ impl ConfigBuilder<ClientConfig, WantsVerifier> {
     /// [`webpki::WebPkiServerVerifier::builder_with_provider`] for more information.
     pub fn with_webpki_verifier(
         self,
-        verifier: Arc<WebPkiServerVerifier>,
+        verifier: Arc<dyn verify::ServerCertVerifier>,
     ) -> ConfigBuilder<ClientConfig, WantsClientCert> {
         ConfigBuilder {
             state: WantsClientCert {
@@ -92,7 +93,7 @@ impl ConfigBuilder<ClientConfig, WantsVerifier> {
 
 /// Container for unsafe APIs
 pub(super) mod danger {
-    use alloc::sync::Arc;
+    use crate::Arc;
     use core::marker::PhantomData;
 
     use crate::client::WantsClientCert;
@@ -160,12 +161,14 @@ impl ConfigBuilder<ClientConfig, WantsClientCert> {
             .load_private_key(key_der)?;
         let resolver =
             handy::AlwaysResolvesClientCert::new(private_key, CertificateChain(cert_chain))?;
-        Ok(self.with_client_cert_resolver(Arc::new(resolver)))
+        let boxed: alloc::boxed::Box<dyn ResolvesClientCert> = alloc::boxed::Box::new(resolver);
+        Ok(self.with_client_cert_resolver(Arc::from(boxed)))
     }
 
     /// Do not support client auth.
     pub fn with_no_client_auth(self) -> ClientConfig {
-        self.with_client_cert_resolver(Arc::new(handy::FailResolveClientCert {}))
+        let boxed: alloc::boxed::Box<dyn ResolvesClientCert> = alloc::boxed::Box::new(handy::FailResolveClientCert {});
+        self.with_client_cert_resolver(Arc::from(boxed))
     }
 
     /// Sets a custom [`ResolvesClientCert`].
@@ -173,6 +176,7 @@ impl ConfigBuilder<ClientConfig, WantsClientCert> {
         self,
         client_auth_cert_resolver: Arc<dyn ResolvesClientCert>,
     ) -> ClientConfig {
+        let boxed: alloc::boxed::Box<dyn crate::KeyLog> = alloc::boxed::Box::new(NoKeyLog {});
         ClientConfig {
             provider: self.state.provider,
             alpn_protocols: Vec::new(),
@@ -182,7 +186,7 @@ impl ConfigBuilder<ClientConfig, WantsClientCert> {
             versions: self.state.versions,
             enable_sni: true,
             verifier: self.state.verifier,
-            key_log: Arc::new(NoKeyLog {}),
+            key_log: Arc::from(boxed),
             enable_secret_extraction: false,
             enable_early_data: false,
             #[cfg(feature = "tls12")]

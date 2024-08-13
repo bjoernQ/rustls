@@ -1,5 +1,5 @@
 #[cfg(feature = "std")]
-use alloc::sync::Arc;
+use crate::Arc;
 use alloc::vec::Vec;
 use core::fmt;
 
@@ -76,7 +76,10 @@ fn pki_error(error: webpki::Error) -> Error {
 
         _ => CertificateError::Other(OtherError(
             #[cfg(feature = "std")]
-            Arc::new(error),
+            {
+                let boxed: alloc::boxed::Box<dyn std::error::Error + Send + Sync> = alloc::boxed::Box::new(error);
+                Arc::from(boxed)
+            },
         ))
         .into(),
     }
@@ -100,7 +103,10 @@ fn crl_error(e: webpki::Error) -> CertRevocationListError {
 
         _ => CertRevocationListError::Other(OtherError(
             #[cfg(feature = "std")]
-            Arc::new(e),
+            {
+                let boxed: alloc::boxed::Box<dyn std::error::Error + Send + Sync> = alloc::boxed::Box::new(e);
+                Arc::from(boxed)
+            },
         )),
     }
 }

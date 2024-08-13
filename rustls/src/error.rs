@@ -620,7 +620,7 @@ impl From<rand::GetRandomFailed> for Error {
 
 mod other_error {
     #[cfg(feature = "std")]
-    use alloc::sync::Arc;
+    use crate::Arc;
     use core::fmt;
     #[cfg(feature = "std")]
     use std::error::Error as StdError;
@@ -697,7 +697,7 @@ mod tests {
         );
         let other = Other(OtherError(
             #[cfg(feature = "std")]
-            alloc::sync::Arc::from(Box::from("")),
+            crate::Arc::from(Box::from("")),
         ));
         assert_ne!(other, other);
         assert_ne!(BadEncoding, Expired);
@@ -721,7 +721,7 @@ mod tests {
         assert_eq!(UnsupportedRevocationReason, UnsupportedRevocationReason);
         let other = Other(OtherError(
             #[cfg(feature = "std")]
-            alloc::sync::Arc::from(Box::from("")),
+            crate::Arc::from(Box::from("")),
         ));
         assert_ne!(other, other);
         assert_ne!(BadSignature, InvalidCrlNumber);
@@ -730,7 +730,7 @@ mod tests {
     #[test]
     #[cfg(feature = "std")]
     fn other_error_equality() {
-        let other_error = OtherError(alloc::sync::Arc::from(Box::from("")));
+        let other_error = OtherError(crate::Arc::from(Box::from("")));
         assert_ne!(other_error, other_error);
         let other: Error = other_error.into();
         assert_ne!(other, other);
@@ -768,7 +768,7 @@ mod tests {
             Error::InvalidCertRevocationList(CertRevocationListError::BadSignature),
             Error::Other(OtherError(
                 #[cfg(feature = "std")]
-                alloc::sync::Arc::from(Box::from("")),
+                crate::Arc::from(Box::from("")),
             )),
         ];
 

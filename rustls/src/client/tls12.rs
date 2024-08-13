@@ -1,6 +1,6 @@
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
-use alloc::sync::Arc;
+use crate::Arc;
 use alloc::vec;
 use alloc::vec::Vec;
 
