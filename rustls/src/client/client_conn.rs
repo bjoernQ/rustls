@@ -1,4 +1,5 @@
 use crate::Arc;
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::marker::PhantomData;
 use core::ops::{Deref, DerefMut};
@@ -309,7 +310,7 @@ impl ClientConfig {
     pub fn builder_with_provider(
         provider: Arc<CryptoProvider>,
     ) -> ConfigBuilder<Self, WantsVersions> {
-        let boxed: alloc::boxed::Box<dyn TimeProvider> = alloc::boxed::Box::new(DefaultTimeProvider);
+        let boxed: Box<dyn TimeProvider> = Box::new(DefaultTimeProvider);
         ConfigBuilder {
             state: WantsVersions {
                 provider,
@@ -438,7 +439,8 @@ impl Resumption {
     /// a session id or RFC 5077 ticket.
     #[cfg(feature = "std")]
     pub fn in_memory_sessions(num: usize) -> Self {
-        let boxed: alloc::boxed::Box<dyn ClientSessionStore> = alloc::boxed::Box::new(super::handy::ClientSessionMemoryCache::new(num));
+        let boxed: Box<dyn ClientSessionStore> =
+            Box::new(super::handy::ClientSessionMemoryCache::new(num));
         Self {
             store: Arc::from(boxed),
             tls12_resumption: Tls12Resumption::SessionIdOrTickets,
@@ -457,7 +459,7 @@ impl Resumption {
 
     /// Disable all use of session resumption.
     pub fn disabled() -> Self {
-        let boxed: alloc::boxed::Box<dyn ClientSessionStore> = alloc::boxed::Box::new(NoClientSessionStorage);
+        let boxed: Box<dyn ClientSessionStore> = Box::new(NoClientSessionStorage);
         Self {
             store: Arc::from(boxed),
             tls12_resumption: Tls12Resumption::Disabled,

@@ -1,4 +1,5 @@
 use crate::Arc;
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 
 use pki_types::{CertificateDer, CertificateRevocationListDer, UnixTime};
@@ -174,7 +175,7 @@ impl ClientCertVerifierBuilder {
             return Err(VerifierBuilderError::NoRootAnchors);
         }
 
-        let boxed: alloc::boxed::Box<dyn ClientCertVerifier> = alloc::boxed::Box::new(WebPkiClientVerifier::new(
+        let boxed: Box<dyn ClientCertVerifier> = Box::new(WebPkiClientVerifier::new(
             self.roots,
             self.root_hint_subjects,
             parse_crls(self.crls)?,
@@ -300,7 +301,7 @@ impl WebPkiClientVerifier {
     /// This is in contrast to using `WebPkiClientVerifier::builder().allow_unauthenticated().build()`,
     /// which will produce a verifier that will offer client authentication, but not require it.
     pub fn no_client_auth() -> Arc<dyn ClientCertVerifier> {
-        let boxed: alloc::boxed::Box<dyn ClientCertVerifier> = alloc::boxed::Box::new(NoClientAuth {});
+        let boxed: Box<dyn ClientCertVerifier> = Box::new(NoClientAuth {});
         Arc::from(boxed)
     }
 

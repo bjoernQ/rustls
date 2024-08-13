@@ -201,8 +201,8 @@ impl server::ResolvesServerCert for AlwaysResolvesChain {
 
 #[cfg(any(feature = "std", feature = "hashbrown"))]
 mod sni_resolver {
-    use alloc::string::{String, ToString};
     use crate::Arc;
+    use alloc::string::{String, ToString};
     use core::fmt::Debug;
 
     use pki_types::{DnsName, ServerName};

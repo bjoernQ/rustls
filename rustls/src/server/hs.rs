@@ -1,6 +1,6 @@
+use crate::Arc;
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
-use crate::Arc;
 use alloc::vec::Vec;
 
 use pki_types::DnsName;

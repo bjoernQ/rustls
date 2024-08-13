@@ -1,4 +1,5 @@
 use crate::Arc;
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::marker::PhantomData;
 
@@ -32,7 +33,7 @@ impl ConfigBuilder<ServerConfig, WantsVerifier> {
 
     /// Disable client authentication.
     pub fn with_no_client_auth(self) -> ConfigBuilder<ServerConfig, WantsServerCert> {
-        let boxed: alloc::boxed::Box<dyn ClientCertVerifier> = alloc::boxed::Box::new(NoClientAuth);
+        let boxed: Box<dyn ClientCertVerifier> = Box::new(NoClientAuth);
         self.with_client_cert_verifier(Arc::from(boxed))
     }
 }
@@ -86,7 +87,7 @@ impl ConfigBuilder<ServerConfig, WantsServerCert> {
         }
 
         let resolver = handy::AlwaysResolvesChain::new(certified_key);
-        let boxed: alloc::boxed::Box<dyn ResolvesServerCert> = alloc::boxed::Box::new(resolver);
+        let boxed: Box<dyn ResolvesServerCert> = Box::new(resolver);
         Ok(self.with_cert_resolver(Arc::from(boxed)))
     }
 
@@ -123,16 +124,18 @@ impl ConfigBuilder<ServerConfig, WantsServerCert> {
         }
 
         let resolver = handy::AlwaysResolvesChain::new_with_extras(certified_key, ocsp);
-        let boxed: alloc::boxed::Box<dyn ResolvesServerCert> = alloc::boxed::Box::new(resolver);
+        let boxed: Box<dyn ResolvesServerCert> = Box::new(resolver);
         Ok(self.with_cert_resolver(Arc::from(boxed)))
     }
 
     /// Sets a custom [`ResolvesServerCert`].
     pub fn with_cert_resolver(self, cert_resolver: Arc<dyn ResolvesServerCert>) -> ServerConfig {
         #[cfg(not(feature = "std"))]
-        let boxed_session_storage: alloc::boxed::Box<dyn super::StoresServerSessions + Send + Sync> = alloc::boxed::Box::new(handy::NoServerSessionStorage {});
-        let boxed_ticketer: alloc::boxed::Box<dyn super::ProducesTickets> = alloc::boxed::Box::new(handy::NeverProducesTickets {});
-        let boxed_keylog: alloc::boxed::Box<dyn crate::KeyLog> = alloc::boxed::Box::new(NoKeyLog {});
+        let boxed_session_storage: Box<dyn super::StoresServerSessions + Send + Sync> =
+            Box::new(handy::NoServerSessionStorage {});
+        let boxed_ticketer: Box<dyn super::ProducesTickets> =
+            Box::new(handy::NeverProducesTickets {});
+        let boxed_keylog: Box<dyn crate::KeyLog> = Box::new(NoKeyLog {});
 
         ServerConfig {
             provider: self.state.provider,

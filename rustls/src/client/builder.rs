@@ -1,4 +1,5 @@
 use crate::Arc;
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::marker::PhantomData;
 
@@ -58,10 +59,10 @@ impl ConfigBuilder<ClientConfig, WantsVerifier> {
             .state
             .provider
             .signature_verification_algorithms;
-        let boxed: alloc::boxed::Box<dyn verify::ServerCertVerifier> = alloc::boxed::Box::new(WebPkiServerVerifier::new_without_revocation(root_store, algorithms));
-        self.with_webpki_verifier(
-            Arc::from(boxed),
-        )
+        let boxed: Box<dyn verify::ServerCertVerifier> = Box::new(
+            WebPkiServerVerifier::new_without_revocation(root_store, algorithms),
+        );
+        self.with_webpki_verifier(Arc::from(boxed))
     }
 
     /// Choose how to verify server certificates using a webpki verifier.
@@ -161,13 +162,13 @@ impl ConfigBuilder<ClientConfig, WantsClientCert> {
             .load_private_key(key_der)?;
         let resolver =
             handy::AlwaysResolvesClientCert::new(private_key, CertificateChain(cert_chain))?;
-        let boxed: alloc::boxed::Box<dyn ResolvesClientCert> = alloc::boxed::Box::new(resolver);
+        let boxed: Box<dyn ResolvesClientCert> = Box::new(resolver);
         Ok(self.with_client_cert_resolver(Arc::from(boxed)))
     }
 
     /// Do not support client auth.
     pub fn with_no_client_auth(self) -> ClientConfig {
-        let boxed: alloc::boxed::Box<dyn ResolvesClientCert> = alloc::boxed::Box::new(handy::FailResolveClientCert {});
+        let boxed: Box<dyn ResolvesClientCert> = Box::new(handy::FailResolveClientCert {});
         self.with_client_cert_resolver(Arc::from(boxed))
     }
 
@@ -176,7 +177,7 @@ impl ConfigBuilder<ClientConfig, WantsClientCert> {
         self,
         client_auth_cert_resolver: Arc<dyn ResolvesClientCert>,
     ) -> ClientConfig {
-        let boxed: alloc::boxed::Box<dyn crate::KeyLog> = alloc::boxed::Box::new(NoKeyLog {});
+        let boxed: Box<dyn crate::KeyLog> = Box::new(NoKeyLog {});
         ClientConfig {
             provider: self.state.provider,
             alpn_protocols: Vec::new(),

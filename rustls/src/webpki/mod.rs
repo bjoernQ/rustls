@@ -77,7 +77,8 @@ fn pki_error(error: webpki::Error) -> Error {
         _ => CertificateError::Other(OtherError(
             #[cfg(feature = "std")]
             {
-                let boxed: alloc::boxed::Box<dyn std::error::Error + Send + Sync> = alloc::boxed::Box::new(error);
+                let boxed: alloc::boxed::Box<dyn std::error::Error + Send + Sync> =
+                    alloc::boxed::Box::new(error);
                 Arc::from(boxed)
             },
         ))
@@ -104,7 +105,8 @@ fn crl_error(e: webpki::Error) -> CertRevocationListError {
         _ => CertRevocationListError::Other(OtherError(
             #[cfg(feature = "std")]
             {
-                let boxed: alloc::boxed::Box<dyn std::error::Error + Send + Sync> = alloc::boxed::Box::new(e);
+                let boxed: alloc::boxed::Box<dyn std::error::Error + Send + Sync> =
+                    alloc::boxed::Box::new(e);
                 Arc::from(boxed)
             },
         )),

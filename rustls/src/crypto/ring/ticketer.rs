@@ -1,7 +1,7 @@
 #![allow(clippy::duplicate_mod)]
 
-use alloc::boxed::Box;
 use crate::Arc;
+use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::fmt;
 use core::fmt::{Debug, Formatter};
